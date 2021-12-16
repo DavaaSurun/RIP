@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Планировщик задач.twig{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css"
+          integrity="sha256-16PDMvytZTH9heHu9KBPjzrFTaoner60bnABykjNiM0=" crossorigin="anonymous">
+<style>
+   #calendrier{
+       width: 50%;
+       margin: auto;
+   }
+</style>
+{% endblock %}
+
+{% block body %}
+<div id="calendrier">
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js"
+            integrity="sha256-XOMgUu4lWKSn8CFoJoBoGd9Q/OET+xrfGYSo+AKpFhE=" crossorigin="anonymous"></script>
+<script>
+
+    window.onload = () => {
+        let calendarElt = document.querySelector("#calendrier")
+
+        let calendar = new FullCalendar.Calendar(calendarElt, {
+            initialView:  'timeGridWeek',
+            locale: 'ru',
+            timeZone: 'Europe/Moscow',
+            headerToolbar:{
+                start: 'prev,next today',
+                center: 'title',
+                end: 'dayGridMonth,timeGridWeek'
+            },
+            events: {{data|raw}},
+            editable: true,
+            eventResizableFromStart: true,
+        })
+
+        calendar.on('eventChange', (e) => {
+            let url = `/api/${e.event.id}/edit`
+            let donnees = {
+                "title": e.event.title,
+                "description": e.event.extendedProps.description,
+                "start": e.event.start,
+                "end": e.event.end,
+                "backgroundColor": e.event.backgroundColor,
+                "borderColor": e.event.borderColor,
+                "textColor": e.event.textColor,
+                "allDay": e.event.allDay
+            }
+
+            let xhr = new XMLHttpRequest
+            xhr.open("PUT", url)
+            xhr.send(JSON.stringify(donnees))
+        })
+        calendar.render()
+    }
+</script>
+{% endblock %}
