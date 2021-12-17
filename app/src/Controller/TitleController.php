@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mercure\HubInterface;
+use Symfony\Component\Mercure\Update;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -16,6 +18,12 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class TitleController extends AbstractController
 {
+    private $hub;
+    public function __construct(HubInterface $hub)
+    {
+        $this->hub=$hub;
+    }
+
     /**
      * @Route("/", name="title_index", methods={"GET"})
      */
@@ -42,6 +50,13 @@ class TitleController extends AbstractController
             return $this->redirectToRoute('title_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        $update = new Update(
+            '@todolist',
+            json_encode(['info' => 'Отправили'])
+        );
+
+        $this->hub->publish($update);
+
         return $this->renderForm('title/new.html.twig', [
             'title' => $title,
             'form' => $form,
@@ -53,6 +68,13 @@ class TitleController extends AbstractController
      */
     public function show(Title $title): Response
     {
+        $update = new Update(
+            '@todolist',
+            json_encode(['info' => 'Получили'])
+        );
+
+        $this->hub->publish($update);
+
         return $this->render('title/show.html.twig', [
             'title' => $title,
         ]);
@@ -72,6 +94,13 @@ class TitleController extends AbstractController
             return $this->redirectToRoute('title_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        $update = new Update(
+            '@todolist',
+            json_encode(['info' => 'Изменили'])
+        );
+
+        $this->hub->publish($update);
+
         return $this->renderForm('title/edit.html.twig', [
             'title' => $title,
             'form' => $form,
@@ -87,6 +116,12 @@ class TitleController extends AbstractController
             $entityManager->remove($title);
             $entityManager->flush();
         }
+        $update = new Update(
+            '@todolist',
+            json_encode(['info' => 'Удалили'])
+        );
+
+        $this->hub->publish($update);
 
         return $this->redirectToRoute('title_index', [], Response::HTTP_SEE_OTHER);
     }
